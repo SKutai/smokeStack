@@ -9,6 +9,9 @@
 // use vertex shader on invisible smokestack
 // use buffer geometry to be able to index all of the vertecies by color
 // use picking to know what vertex was clicked
+
+// center the model
+// fix github
 function main(){
     let 
         canvas,
@@ -85,12 +88,19 @@ function main(){
     // model for picking
     //objLoader.setMaterials(mat);
     objLoader.load('models/smokeStack/surface.obj', (object) => {
-
         object.traverse( function( child ) {
             if ( child.isMesh ) {
                 child.material = mat;
             }
         });
+        let box = new THREE.Box3().setFromObject(object);
+        let boxSize = box.getSize(new THREE.Vector3()).length();
+        let boxCenter = box.getCenter(new THREE.Vector3());
+
+        object.position.x += boxCenter.x;
+        object.position.y += boxCenter.y;
+        object.position.z += boxCenter.z;
+
         object.rotation.x += 2.5;
         scene.add(object);
     });
