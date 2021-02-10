@@ -94,7 +94,6 @@ function main(){
             }
         });
         let box = new THREE.Box3().setFromObject(object);
-        let boxSize = box.getSize(new THREE.Vector3()).length();
         let boxCenter = box.getCenter(new THREE.Vector3());
 
         object.position.x += boxCenter.x;
