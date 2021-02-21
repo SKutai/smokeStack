@@ -75,36 +75,6 @@ function main(){
     });
     */
 
-    /*
-    let mat = new THREE.ShaderMaterial({
-        uniforms:{},
-        vertexShader: document.getElementById('vertexshader').textContent,
-        fragmentShader: document.getElementById('fragmentshader').textContent
-    });
-    */
-    
-    let mat = new THREE.MeshNormalMaterial();
-
-    // model for picking
-    //objLoader.setMaterials(mat);
-    objLoader.load('models/smokeStack/surface.obj', (object) => {
-        object.traverse( function( child ) {
-            if ( child.isMesh ) {
-                child.material = mat;
-            }
-        });
-        let box = new THREE.Box3().setFromObject(object);
-        let boxCenter = box.getCenter(new THREE.Vector3());
-
-        object.position.x += boxCenter.x;
-        object.position.y += boxCenter.y;
-        object.position.z += boxCenter.z;
-
-        object.rotation.x += 2.5;
-        scene.add(object);
-    });
-
-    // canvas resizing
     function resizeRendererToDisplaySize(renderer) {
 
         const canvas = renderer.domElement;
@@ -114,34 +84,77 @@ function main(){
         const needResize = canvas.width !== width || canvas.height !== height;
 
         if (needResize) {
-          renderer.setSize(width, height, false);
+            renderer.setSize(width, height, false);
         }
 
         return needResize;
-      }
+    }
 
     // render animation
     function render(time) {
         time *= 0.001;
-  
+
         if (resizeRendererToDisplaySize(renderer)) {
             const canvas = renderer.domElement;
             camera.aspect = canvas.clientWidth / canvas.clientHeight;
             camera.updateProjectionMatrix();
         }
-  
+
         const canvas = renderer.domElement;
         camera.aspect = canvas.clientWidth / canvas.clientHeight;
         camera.updateProjectionMatrix();
-    
+
         controls.update();
 
         renderer.render(scene, camera);
-    
+
         requestAnimationFrame(render);
     }
+
+
+    $.get("shaders/vertexShader.vert", function(vertexSrc) {
+        $.get("shaders/fragmentShader.frag", function(fragmentSrc) {
+            let mat = new THREE.ShaderMaterial({
+                uniforms:{},
+                vertexShader: vertexSrc,
+                fragmentShader: fragmentSrc
+            });
+
+            objLoader.load('models/smokeStack/surface.obj', (object) => {
+                object.traverse( function( child ) {
+                    if ( child.isMesh ) {
+                        child.material = mat;
+                    }
+                });
+                let box = new THREE.Box3().setFromObject(object);
+                let boxCenter = box.getCenter(new THREE.Vector3());
+        
+                object.position.x += boxCenter.x;
+                object.position.y += boxCenter.y;
+                object.position.z += boxCenter.z;
+        
+                object.rotation.x += 2.5;
+                scene.add(object);
+                requestAnimationFrame(render);
+            });            
+
+
+        });
+    });
+
+    /*
     
-    requestAnimationFrame(render);
+    */
+    
+    //let mat = new THREE.MeshNormalMaterial();
+
+    // model for picking
+    //objLoader.setMaterials(mat);
+    
+
+    // canvas resizing
+    
+    
 
 }
 main();
