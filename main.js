@@ -2,7 +2,8 @@
 // https://threejsfundamentals.org/threejs/lessons/threejs-picking.html
 // https://threejs.org/docs/#api/en/core/BufferGeometry 
 // https://discourse.threejs.org/t/solved-geometry-vertices-is-undefined/3133
-// ask ryan about picking
+// https://stackoverflow.com/questions/59949791/how-to-get-vertices-of-obj-model-object-in-three-js
+// https://www.howtobuildsoftware.com/index.php/how-do/b2Qd/javascript-threejs-how-to-access-the-vertices-after-loading-object-with-objloader-in-threejs
 
 // make vertex shader for smoke stack
 // load an invisible smokestack
@@ -13,6 +14,9 @@
 // center the model
 // fix github
 function main(){
+    const vertecies = 85566;
+    const faces = 170118;
+
     let 
         canvas,
         scene,
@@ -43,7 +47,7 @@ function main(){
     camera.position.z = 50;
 
     // renderer
-    renderer = new THREE.WebGLRenderer( {canvas} ); 
+    renderer = new THREE.WebGLRenderer( {canvas} ); // antiailiasing is off by default. https://threejs.org/docs/index.html#api/en/renderers/WebGLRenderer
     renderer.setSize(canvas.clientWidth, canvas.clientHeight, false); 
 
     // lighting
@@ -65,7 +69,6 @@ function main(){
     /*
     mtlLoader.load('models/smokeStack/surface.mtl', (mtl) => {
         mtl.preload();
-
         objLoader.setMaterials(mtl);
         objLoader.load('models/smokeStack/surface.obj', (object) => {
             scene.add(object);
@@ -111,54 +114,87 @@ function main(){
         requestAnimationFrame(render);
     }
 
-
+    // promises for the shader
     $.get("shaders/vertexShader.vert", function(vertexSrc) {
         $.get("shaders/fragmentShader.frag", function(fragmentSrc) {
+
+            // custom material
             let mat = new THREE.ShaderMaterial({
                 uniforms:{},
                 vertexShader: vertexSrc,
                 fragmentShader: fragmentSrc
             });
 
-            objLoader.load('models/smokeStack/surface.obj', (object) => {
+            // load the obj model
+            objLoader.load('../../models/smokeStack/surface.obj', (object) => {
+                
+                const geometry = new THREE.BufferGeometry();
+                // const vertexID = new Float32Array(vertecies);
+                // geometry.setAttribute('vertexID', new THREE.BufferAttribute( vertexID, 1 ));
+                
+                // bounding box
+                let box = new THREE.Box3().setFromObject(object);
+
+                // dimensions of the bounding box
+                let dimensions = new THREE.Vector3();
+                box.getSize(dimensions);
+
+                // set the material of the object to mat
+                let i = 0;
                 object.traverse( function( child ) {
                     if ( child.isMesh ) {
                         child.material = mat;
+
+                        let pos = child.geometry.attributes.position.array;
+
+                        if (i >= 0){
+                            if (i = 0){
+                                
+                                console.log(pos);
+                                
+                            }
+                            else{
+                                pos = new Float32Array(child.geometry.attributes.position.array.length);
+                                console.log(pos);
+                            }
+                        }
+
+                        geometry.setAttribute(child.uuid, new THREE.BufferAttribute( pos, 3 ));
+
+                        i++;
+
+                        // let v = new THREE.Vector3( pos.getX(0), pos.getY(0), pos.getZ(0) );
+                        // console.log(v);
+
+                        // console.log(child.geometry.attributes.position.array);
                     }
                 });
-                let box = new THREE.Box3().setFromObject(object);
+
+                console.log(geometry);
+
+                // center the model
                 let boxCenter = box.getCenter(new THREE.Vector3());
-        
                 object.position.x += boxCenter.x;
                 object.position.y += boxCenter.y;
                 object.position.z += boxCenter.z;
         
+                // set model upright
                 object.rotation.x += 2.5;
                 scene.add(object);
+
                 requestAnimationFrame(render);
+
+                /*
+                const id =
+                (pixelBuffer[0] <<  24) |
+                (pixelBuffer[1] <<  16) |
+                (pixelBuffer[2] <<   8);
+                */
             });            
-
-
         });
     });
-
-    /*
-    
-    */
-    
-    //let mat = new THREE.MeshNormalMaterial();
-
-    // model for picking
-    //objLoader.setMaterials(mat);
-    
-
-    // canvas resizing
-    
-    
-
 }
 main();
-
 
 
 
