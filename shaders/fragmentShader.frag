@@ -1,7 +1,9 @@
 varying vec3 pos;
+varying float i;
 
 void main(){
-    float sigma = 1.0;
-    float sigmaSqr = sigma*sigma;
-    gl_FragColor = vec4(exp(-pos[0]/sigmaSqr), exp(-pos[1]/sigmaSqr), exp(-pos[2]/sigmaSqr), 1.0);
+    float R = floor(i / (256.0*256.0));
+    float G = floor((i - 256.0*256.0*R)/256.0);
+    float B = i - 256.0*256.0*R - 256.0*G;
+    gl_FragColor = vec4(R/255.0, G/255.0, B/255.0, 0.0);
 }
