@@ -68,9 +68,11 @@ class ArtCanvas {
         controls.enableZoom = true;
         this.controls = controls;
 
-        // Setup placeholders for two meshes
+        // Setup placeholders for two meshes and picking material
+        // (TODO: The could all be promises to make code more robust)
         this.textureMesh = null;
         this.pickerMesh = null;
+        this.pickMat = null; // Picking material
     }
 
     /**
@@ -78,14 +80,16 @@ class ArtCanvas {
      * @param {string} filename Path to mesh file
      */
     loadMeshPickerTexture(filename) {
+        let canvas = this;
         $.get("shaders/XYZ.vert", function(vertexSrc) {
             $.get("shaders/XYZ.frag", function(fragmentSrc) {
                 // custom material
                 let mat = new THREE.ShaderMaterial({
-                    uniforms:{},
+                    uniforms:{coord_choice:{value:2.0}},
                     vertexShader: vertexSrc,
                     fragmentShader: fragmentSrc
                 });
+                canvas.pickMat = mat;
                 const objLoader = new OBJLoader();
                 objLoader.load(filename, function(object) {      
                     object.traverse( function( child ) {
@@ -175,6 +179,24 @@ class ArtCanvas {
 
     toggleTexture() {
         this.displayTexture = !this.displayTexture;
+        this.updateVisibility();
+    }
+
+    toggleX() {
+        this.displayTexture = false;
+        this.pickMat.uniforms.coord_choice.value = 1;
+        this.updateVisibility();
+    }
+
+    toggleY() {
+        this.displayTexture = false;
+        this.pickMat.uniforms.coord_choice.value = 2;
+        this.updateVisibility();
+    }
+
+    toggleZ() {
+        this.displayTexture = false;
+        this.pickMat.uniforms.coord_choice.value = 3;
         this.updateVisibility();
     }
 

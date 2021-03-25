@@ -3,5 +3,5 @@ varying vec3 pos;
 void main(){
     vec4 modelViewPosition = modelViewMatrix * vec4( position , 1.0);
     gl_Position = projectionMatrix * modelViewPosition;
-    pos = modelViewPosition.xyz;
+    pos = position; // In world coordinates
 }

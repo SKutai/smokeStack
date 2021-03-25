@@ -1,7 +1,19 @@
 varying vec3 pos;
+uniform float coord_choice;
 
 void main(){
-    float sigma = 1.0;
-    float sigmaSqr = sigma*sigma;
-    gl_FragColor = vec4(exp(-pos[0]/sigmaSqr), exp(-pos[1]/sigmaSqr), exp(-pos[2]/sigmaSqr), 1.0);
+    float coord = pos.x;
+    if (coord_choice == 2.0) {
+        coord = pos.y;
+    }
+    else if (coord_choice == 3.0) {
+        coord = pos.z;
+    }
+    // Assume that every dimension of pos is in [-100, 100]
+    coord = (coord + 100.0)/200.0; // Normalize to the range [0, 1]
+    coord = coord*(256.0*256.0*256.0-1.0);
+    float R = floor(coord/(256.0*256.0));
+    float G = floor((coord - 256.0*256.0*R)/256.0);
+    float B = coord - 256.0*256.0*R - 256.0*G;
+    gl_FragColor = vec4(R/256.0, G/256.0, B/256.0, 1.0);
 }

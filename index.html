@@ -45,7 +45,21 @@
                         <canvas id="threecanvas" width="1200" height="900"></canvas>
                     </td>
                     <td>
-                        <button type="button" onclick=toggleTexture()>Toggle Texture</button> 
+                        <table>
+                            <tr>
+                                <td><button type="button" onclick=toggleTexture()>Toggle Texture</button> </td>
+                            </tr>
+                            <tr>
+                                <td><button type="button" onclick=toggleX()>X</button> </td>
+                            </tr>
+                            <tr>
+                                <td><button type="button" onclick=toggleY()>Y</button> </td>
+                            </tr>
+                            <tr>
+                                <td><button type="button" onclick=toggleZ()>Z</button> </td>
+                            </tr>
+                        </table>
+                        
                     </td>
                 </tr>
             </table>
@@ -60,6 +74,15 @@
             canvas.loadMesh(filename, matname);
             function toggleTexture() {
                 canvas.toggleTexture();
+            }
+            function toggleX() {
+                canvas.toggleX();
+            }
+            function toggleY() {
+                canvas.toggleY();
+            }
+            function toggleZ() {
+                canvas.toggleZ();
             }
         </script>
     </body>
