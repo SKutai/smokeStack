@@ -11,6 +11,21 @@
 // use buffer geometry to be able to index all of the vertices by color
 // use picking to know what vertex was clicked
 
+function centerOnBBox(object) {
+    // bounding box
+    let box = new THREE.Box3().setFromObject(object);
+    // dimensions of the bounding box
+    let dimensions = new THREE.Vector3();
+    box.getSize(dimensions);
+    // center the model
+    let boxCenter = box.getCenter(new THREE.Vector3());
+    object.position.x += boxCenter.x;
+    object.position.y += boxCenter.y;
+    object.position.z += boxCenter.z;
+    // set model upright
+    object.rotation.x += 2.5;
+}
+
 // center the model
 // fix github
 class ArtCanvas {
@@ -41,7 +56,7 @@ class ArtCanvas {
         this.renderer = renderer;
 
         // lighting
-        const ambient = new THREE.AmbientLight( 0x404040 );
+        const ambient = new THREE.AmbientLight( 0xFFFFFF );
         scene.add(ambient);
 
         // orbit controls
@@ -51,6 +66,10 @@ class ArtCanvas {
         controls.campingFactor = 0.25;
         controls.enableZoom = true;
         this.controls = controls;
+
+        const mtlLoader = new MTLLoader();
+        // Step 2: Asynchronously load in mesh geometry 
+        const objLoader = new OBJLoader();
 
         this.loadShaders();
     }
@@ -84,44 +103,16 @@ class ArtCanvas {
         let canvas = this;
         // Step 1: Asynchronously load material with texture
         const mtlLoader = new MTLLoader();
-
-        this.textureMatPromise = new Promise(function(resolve) {
-            mtlLoader.load(matfilename, (mtl) => {
-                mtl.preload();
-                canvas.textureMat = mtl;
-                resolve(mtl);
-            });
-        });
-        this.textureMat = null;
-        
-
-        // Step 2: Asynchronously load in mesh geometry 
         const objLoader = new OBJLoader();
-        objLoader.load(filename, function(object) {       
-            // bounding box
-            let box = new THREE.Box3().setFromObject(object);
-            // dimensions of the bounding box
-            let dimensions = new THREE.Vector3();
-            box.getSize(dimensions);
-
-            // set the material of the object to mat
-            canvas.textureMatPromise.then(function(mat) {
-                console.log(mat);
-                objLoader.setMaterials(mat);
-                // Redraw with the material
+        
+        mtlLoader.load(matfilename, (mtl) => {
+            mtl.preload();
+            objLoader.setMaterials(mtl);
+            objLoader.load(filename, function(object) {       
+                centerOnBBox(object);
                 canvas.scene.add(object);
                 requestAnimationFrame(canvas.render.bind(canvas));
             });
-            
-
-            // center the model
-            let boxCenter = box.getCenter(new THREE.Vector3());
-            object.position.x += boxCenter.x;
-            object.position.y += boxCenter.y;
-            object.position.z += boxCenter.z;
-
-            // set model upright
-            object.rotation.x += 2.5;
         });
     }
 
