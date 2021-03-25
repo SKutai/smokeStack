@@ -39,9 +39,15 @@
         <script src="./three/three.js/examples/jsm/postprocessing/GlitchPass.js"></script>
 
         <script type="text/javascript" src="../jquery-3.5.1.min.js"></script>
+        <script type="text/javascript" src="main.js"></script>
 
         <!-- my stuff -->
-        <script src="main.js"></script>
+        <script>
+            let filename = 'models/smokeStack/surface.obj';
+            let matname = 'models/smokeStack/surface.mtl';
+            let canvas = new ArtCanvas();
+            canvas.loadMesh(filename, matname);
+        </script>
     </body>
 
 </html>
