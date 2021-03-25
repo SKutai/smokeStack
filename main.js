@@ -30,11 +30,12 @@ function centerOnBBox(object) {
 // fix github
 class ArtCanvas {
     constructor() {
-        let canvas = document.querySelector('#c');
+        let canvas = document.getElementById("threecanvas");
         let scene = new THREE.Scene();
         scene.background = new THREE.Color('gray');
         this.canvas = canvas;
         this.scene = scene;
+        this.displayTexture = true;
 
         // camera
         const fov = 75;
@@ -67,30 +68,39 @@ class ArtCanvas {
         controls.enableZoom = true;
         this.controls = controls;
 
-        const mtlLoader = new MTLLoader();
-        // Step 2: Asynchronously load in mesh geometry 
-        const objLoader = new OBJLoader();
-
-        this.loadShaders();
+        // Setup placeholders for two meshes
+        this.textureMesh = null;
+        this.pickerMesh = null;
     }
 
-    loadShaders() {
-        const canvas = this;
-        this.coordShaderMatPromise = new Promise(function(resolve) {
-            $.get("shaders/X.vert", function(vertexSrc) {
-                $.get("shaders/X.frag", function(fragmentSrc) {
-                    // custom material
-                    let mat = new THREE.ShaderMaterial({
-                        uniforms:{},
-                        vertexShader: vertexSrc,
-                        fragmentShader: fragmentSrc
+    /**
+     * Load in a copy of the mesh that uses the picker shader
+     * @param {string} filename Path to mesh file
+     */
+    loadMeshPickerTexture(filename) {
+        $.get("shaders/XYZ.vert", function(vertexSrc) {
+            $.get("shaders/XYZ.frag", function(fragmentSrc) {
+                // custom material
+                let mat = new THREE.ShaderMaterial({
+                    uniforms:{},
+                    vertexShader: vertexSrc,
+                    fragmentShader: fragmentSrc
+                });
+                const objLoader = new OBJLoader();
+                objLoader.load(filename, function(object) {      
+                    object.traverse( function( child ) {
+                        if (child.isMesh) {
+                            child.material = mat;
+                        }
                     });
-                    canvas.coordShaderMat = mat;
-                    resolve(mat);
+                    canvas.pickerMesh = object;
+                    centerOnBBox(object);
+                    canvas.scene.add(object);
+                    canvas.updateVisibility();
+                    requestAnimationFrame(canvas.render.bind(canvas));
                 });
             });
         });
-        this.coordShaderMat = null;
     }
 
     /**
@@ -109,11 +119,15 @@ class ArtCanvas {
             mtl.preload();
             objLoader.setMaterials(mtl);
             objLoader.load(filename, function(object) {       
+                canvas.textureMesh = object;
                 centerOnBBox(object);
                 canvas.scene.add(object);
+                canvas.loadMeshPickerTexture(filename);
                 requestAnimationFrame(canvas.render.bind(canvas));
             });
         });
+
+        
     }
 
     resizeRendererToDisplaySize() {
@@ -143,6 +157,25 @@ class ArtCanvas {
         this.controls.update();
         this.renderer.render(this.scene, this.camera);
         requestAnimationFrame(this.render.bind(this)); // Keep the animation going
+    }
+
+    updateVisibility() {
+        const canvas = this;
+        this.textureMesh.traverse ( function (child) {
+            if (child.isMesh) {
+                child.visible = canvas.displayTexture;
+            }
+        });
+        this.pickerMesh.traverse ( function (child) {
+            if (child.isMesh) {
+                child.visible = !canvas.displayTexture;
+            }
+        });
+    }
+
+    toggleTexture() {
+        this.displayTexture = !this.displayTexture;
+        this.updateVisibility();
     }
 
     /*
