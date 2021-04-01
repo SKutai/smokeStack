@@ -4,6 +4,9 @@
 // https://discourse.threejs.org/t/solved-geometry-vertices-is-undefined/3133
 // https://stackoverflow.com/questions/59949791/how-to-get-vertices-of-obj-model-object-in-three-js
 // https://www.howtobuildsoftware.com/index.php/how-do/b2Qd/javascript-threejs-how-to-access-the-vertices-after-loading-object-with-objloader-in-threejs
+// ray caster
+// https://threejs.org/docs/index.html?q=ray#api/en/core/Raycaster 
+
 
 // make vertex shader for smoke stack
 // load an invisible smokestack
@@ -31,6 +34,9 @@ function centerOnBBox(object) {
 class ArtCanvas {
     constructor() {
         let canvas = document.getElementById("threecanvas");
+        const gl = canvas.getContext('webgl');
+        var pixels = new Uint8Array(4 * gl.drawingBufferWidth * gl.drawingBufferHeight);
+
         let scene = new THREE.Scene();
         scene.background = new THREE.Color('gray');
         this.canvas = canvas;
@@ -73,6 +79,32 @@ class ArtCanvas {
         this.textureMesh = null;
         this.pickerMesh = null;
         this.pickMat = null; // Picking material
+
+        canvas.addEventListener("click", function(event){
+
+            var eventLocation = getEventLocation(event);
+            console.log(eventLocation);
+            
+            gl.readPixels(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
+            
+        
+            // var context = canvas.getContext("webgl");
+            // var pixelData = gl.getImageData(eventLocation.x, eventLocation.y, 1, 1).data; 
+            
+            const x = eventLocation.x
+            const y = eventLocation.y
+            
+            var pixelR = pixels[4 * (y * gl.drawingBufferWidth + x)];
+            var pixelG = pixels[4 * (y * gl.drawingBufferWidth + x) + 1];
+            var pixelB = pixels[4 * (y * gl.drawingBufferWidth + x) + 2];
+            var pixelA = pixels[4 * (y * gl.drawingBufferWidth + x) + 3];
+
+            console.log(pixelR);
+            console.log(pixelG);
+            console.log(pixelB);
+            console.log(pixelA);
+
+        }, false);
     }
 
     /**
@@ -148,11 +180,13 @@ class ArtCanvas {
 
     // render animation
     render() {
+        /*
         if (this.resizeRendererToDisplaySize()) {
             const canvas = this.renderer.domElement;
             this.camera.aspect = canvas.clientWidth / canvas.clientHeight;
             this.camera.updateProjectionMatrix();
         }
+        */
 
         const canvas = this.renderer.domElement;
         this.camera.aspect = canvas.clientWidth / canvas.clientHeight;
@@ -207,6 +241,44 @@ class ArtCanvas {
     (pixelBuffer[2] <<   8);
     */
 
-                     
+    addSphere(X, Y, Z){
+        const geometry = new THREE.SphereGeometry( 10, 32, 32 );
+        const material = new THREE.MeshBasicMaterial( {color: 0xffff00} );
+        const sphere = new THREE.Mesh( geometry, material );
+        
+        this.scene.add( sphere );
 
+        sphere.position.x = X;
+        sphere.position.y = Y;
+        sphere.position.z = Z;
+    }
+}
+
+// location of the canvas
+function getElementPosition() {
+    obj = document.getElementById("threecanvas");
+    var curleft = 0, curtop = 0;
+    if (obj.offsetParent) {
+        do {
+            curleft += obj.offsetLeft;
+            curtop += obj.offsetTop;
+        } while (obj = obj.offsetParent);
+        return { x: curleft, y: curtop };
+    }
+    return undefined;
+}
+
+// location of mouse click
+function getEventLocation(event){
+    // Relies on the getElementPosition function.
+    var pos = this.getElementPosition();
+    
+    return {
+        x: (event.pageX - pos.x),
+        y: (event.pageY - pos.y)
+    };
+}
+
+function togTxt(){
+    return this.toggleTexture();
 }
