@@ -33,9 +33,12 @@ function centerOnBBox(object) {
 // fix github
 class ArtCanvas {
     constructor() {
+        let that = this;
         let canvas = document.getElementById("threecanvas");
         const gl = canvas.getContext('webgl');
+        this.gl = gl;
         var pixels = new Uint8Array(4 * gl.drawingBufferWidth * gl.drawingBufferHeight);
+        this.pixels = pixels;
 
         let scene = new THREE.Scene();
         scene.background = new THREE.Color('gray');
@@ -80,29 +83,19 @@ class ArtCanvas {
         this.pickerMesh = null;
         this.pickMat = null; // Picking material
 
+        
+        this.isClicked = false;
+        this.eventLocation = null;
         canvas.addEventListener("click", function(event){
 
-            var eventLocation = getEventLocation(event);
-            console.log(eventLocation);
+            that.isClicked = true;
             
-            gl.readPixels(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
-            
-        
-            // var context = canvas.getContext("webgl");
-            // var pixelData = gl.getImageData(eventLocation.x, eventLocation.y, 1, 1).data; 
-            
-            const x = eventLocation.x
-            const y = eventLocation.y
-            
-            var pixelR = pixels[4 * (y * gl.drawingBufferWidth + x)];
-            var pixelG = pixels[4 * (y * gl.drawingBufferWidth + x) + 1];
-            var pixelB = pixels[4 * (y * gl.drawingBufferWidth + x) + 2];
-            var pixelA = pixels[4 * (y * gl.drawingBufferWidth + x) + 3];
+            that.toggleTexture();
 
-            console.log(pixelR);
-            console.log(pixelG);
-            console.log(pixelB);
-            console.log(pixelA);
+
+            that.eventLocation = getEventLocation(event);
+            console.log(that.eventLocation);
+            
 
         }, false);
     }
@@ -178,8 +171,29 @@ class ArtCanvas {
         return needResize;
     }
 
+    getPixels(){
+            const gl = this.gl;
+            const pixels = this.pixels;
+            gl.readPixels(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
+            
+            
+            const x = this.eventLocation.x
+            const y = this.eventLocation.y
+            
+            var pixelR = pixels[4 * (y * gl.drawingBufferWidth + x)];
+            var pixelG = pixels[4 * (y * gl.drawingBufferWidth + x) + 1];
+            var pixelB = pixels[4 * (y * gl.drawingBufferWidth + x) + 2];
+            var pixelA = pixels[4 * (y * gl.drawingBufferWidth + x) + 3];
+
+            console.log(pixelR);
+            console.log(pixelG);
+            console.log(pixelB);
+            console.log(pixelA);
+    }
+
     // render animation
     render() {
+
         /*
         if (this.resizeRendererToDisplaySize()) {
             const canvas = this.renderer.domElement;
@@ -194,6 +208,17 @@ class ArtCanvas {
 
         this.controls.update();
         this.renderer.render(this.scene, this.camera);
+
+        if(this.isClicked){
+            this.getPixels();
+            this.isClicked = false;
+
+        }
+
+        //const gl = this.gl;
+        //gl.readPixels(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight, gl.RGBA, gl.UNSIGNED_BYTE, this.pixels);
+        //console.log(this.pixels);
+
         requestAnimationFrame(this.render.bind(this)); // Keep the animation going
     }
 
@@ -212,6 +237,7 @@ class ArtCanvas {
     }
 
     toggleTexture() {
+        console.log("toggleing");
         this.displayTexture = !this.displayTexture;
         this.updateVisibility();
     }
@@ -277,8 +303,4 @@ function getEventLocation(event){
         x: (event.pageX - pos.x),
         y: (event.pageY - pos.y)
     };
-}
-
-function togTxt(){
-    return this.toggleTexture();
 }
