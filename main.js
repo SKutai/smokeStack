@@ -39,6 +39,16 @@ class ArtCanvas {
         this.gl = gl;
         var pixels = new Uint8Array(4 * gl.drawingBufferWidth * gl.drawingBufferHeight);
         this.pixels = pixels;
+        let red = 0;
+        this.red = red;
+        let green = 0;
+        this.green = green;
+        let blue = 0;
+        this.blue = blue;
+        let alpha = 0;
+        this.alpha = alpha;
+        let spot = [0,0,0];
+        this.spot = spot;
 
         let scene = new THREE.Scene();
         scene.background = new THREE.Color('gray');
@@ -84,19 +94,19 @@ class ArtCanvas {
         this.pickMat = null; // Picking material
 
         
+        // Click
         this.isClicked = false;
         this.eventLocation = null;
+        this.toggleCount = 0;
         canvas.addEventListener("click", function(event){
 
             that.isClicked = true;
             
-            that.toggleTexture();
-
+            that.toggleX();
 
             that.eventLocation = getEventLocation(event);
             console.log(that.eventLocation);
             
-
         }, false);
     }
 
@@ -174,21 +184,27 @@ class ArtCanvas {
     getPixels(){
             const gl = this.gl;
             const pixels = this.pixels;
+            let r = this.red;
+            let g = this.green;
+            let b = this.blue;
+            let a = this.alpha
             gl.readPixels(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
             
             
             const x = this.eventLocation.x
             const y = this.eventLocation.y
             
-            var pixelR = pixels[4 * (y * gl.drawingBufferWidth + x)];
-            var pixelG = pixels[4 * (y * gl.drawingBufferWidth + x) + 1];
-            var pixelB = pixels[4 * (y * gl.drawingBufferWidth + x) + 2];
-            var pixelA = pixels[4 * (y * gl.drawingBufferWidth + x) + 3];
+            r = pixels[4 * (y * gl.drawingBufferWidth + x)];
+            g = pixels[4 * (y * gl.drawingBufferWidth + x) + 1];
+            b = pixels[4 * (y * gl.drawingBufferWidth + x) + 2];
+            a = pixels[4 * (y * gl.drawingBufferWidth + x) + 3];
 
-            console.log(pixelR);
-            console.log(pixelG);
-            console.log(pixelB);
-            console.log(pixelA);
+            console.log(r);
+            console.log(g);
+            console.log(b);
+            console.log(a);
+
+            return [r,g,b,a];
     }
 
     // render animation
@@ -210,14 +226,31 @@ class ArtCanvas {
         this.renderer.render(this.scene, this.camera);
 
         if(this.isClicked){
-            this.getPixels();
-            this.isClicked = false;
+            switch(this.toggleCount){
+                case 0:
+                    this.spot[0] = this.backToCoords(this.getPixels());
+                    this.toggleY();
+                    this.toggleCount++;
+                    break;
+                case 1:
+                    this.spot[1] = this.backToCoords(this.getPixels());
+                    this.toggleZ();
+                    this.toggleCount++;
+                    break;
+                case 2:
+                    this.spot[2] = this.backToCoords(this.getPixels());
+                    this.toggleTexture();
+                    this.addSphere(this.spot[0], this.spot[1], this.spot[2]);
 
+                    this.toggleCount = 0;
+                    this.isClicked = false;
+                    break;
+                default:
+                    this.toggleCount = 0;
+                    this.isClicked = false;
+                    break;
+            }
         }
-
-        //const gl = this.gl;
-        //gl.readPixels(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight, gl.RGBA, gl.UNSIGNED_BYTE, this.pixels);
-        //console.log(this.pixels);
 
         requestAnimationFrame(this.render.bind(this)); // Keep the animation going
     }
@@ -237,38 +270,44 @@ class ArtCanvas {
     }
 
     toggleTexture() {
-        console.log("toggleing");
+        console.log("toggling");
         this.displayTexture = !this.displayTexture;
         this.updateVisibility();
     }
 
     toggleX() {
+        console.log("togglingX");
         this.displayTexture = false;
         this.pickMat.uniforms.coord_choice.value = 1;
         this.updateVisibility();
     }
 
     toggleY() {
+        console.log("togglingY");
         this.displayTexture = false;
         this.pickMat.uniforms.coord_choice.value = 2;
         this.updateVisibility();
     }
 
     toggleZ() {
+        console.log("togglingZ");
         this.displayTexture = false;
         this.pickMat.uniforms.coord_choice.value = 3;
         this.updateVisibility();
     }
 
-    /*
-    const id =
-    (pixelBuffer[0] <<  24) |
-    (pixelBuffer[1] <<  16) |
-    (pixelBuffer[2] <<   8);
-    */
+    backToCoords(rgba){
+        let coord = (rgba[0] << 16) | (rgba[1] << 8) | (rgba[2]);
+        coord /= ((265*256*256)-1);
+        coord = (coord * 200) - 100;
+
+        console.log(coord);
+        return coord;
+        
+    }
 
     addSphere(X, Y, Z){
-        const geometry = new THREE.SphereGeometry( 10, 32, 32 );
+        const geometry = new THREE.SphereGeometry( 1, 32, 32 );
         const material = new THREE.MeshBasicMaterial( {color: 0xffff00} );
         const sphere = new THREE.Mesh( geometry, material );
         
@@ -277,7 +316,10 @@ class ArtCanvas {
         sphere.position.x = X;
         sphere.position.y = Y;
         sphere.position.z = Z;
+
+        console.log("sphere added: [" + sphere.position.x + ", " + sphere.position.y + ", " + sphere.position.z + "]");
     }
+    
 }
 
 // location of the canvas
