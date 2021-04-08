@@ -49,6 +49,8 @@ class ArtCanvas {
         this.alpha = alpha;
         let spot = [0,0,0];
         this.spot = spot;
+        let clickObjects = [];
+        this.clickObjects = clickObjects;
 
         let scene = new THREE.Scene();
         scene.background = new THREE.Color('gray');
@@ -94,20 +96,53 @@ class ArtCanvas {
         this.pickMat = null; // Picking material
 
         
-        // Click
+        // Click variables
         this.isClicked = false;
         this.eventLocation = null;
         this.toggleCount = 0;
+        let cntrlIsPressed = false;
+
+        // control key
+        document.addEventListener("keydown", function(event) {
+            if (event.code == "ControlLeft") {
+                cntrlIsPressed = true;
+            }
+        });
+        document.addEventListener("keyup", function(event) {
+            if (event.code == "ControlLeft") {
+                cntrlIsPressed = false;
+            }
+        });
+
+        // left click
         canvas.addEventListener("click", function(event){
+            if(cntrlIsPressed == true){
+                scene.background = new THREE.Color('white');
 
-            that.isClicked = true;
-            
-            that.toggleX();
+                that.isClicked = true;
+        
+                that.toggleX();
 
-            that.eventLocation = getEventLocation(event);
-            console.log(that.eventLocation);
-            
+                that.eventLocation = getEventLocation(event);
+                console.log(that.eventLocation);
+            }
+            cntrlIsPressed = false;
         }, false);
+
+        // right click
+        canvas.addEventListener("contextmenu", function(event){
+            if(cntrlIsPressed == true){
+                let item = clickObjects.pop();
+                if(typeof item !== 'undefined'){
+                    scene.remove(item);
+                    item.geometry.dispose();
+                    item.material.dispose();
+                    item = undefined;
+                }
+            }
+            cntrlIsPressed = false;
+        },false);
+
     }
 
     /**
@@ -192,7 +227,7 @@ class ArtCanvas {
             
             
             const x = this.eventLocation.x
-            const y = this.eventLocation.y
+            const y = this.renderer.domElement.clientHeight - this.eventLocation.y
             
             r = pixels[4 * (y * gl.drawingBufferWidth + x)];
             g = pixels[4 * (y * gl.drawingBufferWidth + x) + 1];
@@ -226,26 +261,42 @@ class ArtCanvas {
         this.renderer.render(this.scene, this.camera);
 
         if(this.isClicked){
+
+            
+            if(compareColors(this.getPixels(), [255,255,255])){
+                this.scene.background = new THREE.Color('gray');
+                this.toggleCount = -1;
+                this.isClicked = false;
+                this.toggleTexture();
+            }
+            
             switch(this.toggleCount){
                 case 0:
                     this.spot[0] = this.backToCoords(this.getPixels());
                     this.toggleY();
                     this.toggleCount++;
+                    console.log("get X" + this.getPixels());
                     break;
                 case 1:
                     this.spot[1] = this.backToCoords(this.getPixels());
                     this.toggleZ();
                     this.toggleCount++;
+                    console.log("get Y" + this.getPixels());
                     break;
                 case 2:
                     this.spot[2] = this.backToCoords(this.getPixels());
                     this.toggleTexture();
+                    this.scene.background = new THREE.Color('gray');
+
+                    console.log("get Z" + this.getPixels());
+
                     this.addSphere(this.spot[0], this.spot[1], this.spot[2]);
 
                     this.toggleCount = 0;
                     this.isClicked = false;
                     break;
                 default:
+                    this.scene.background = new THREE.Color('gray');
                     this.toggleCount = 0;
                     this.isClicked = false;
                     break;
@@ -296,22 +347,23 @@ class ArtCanvas {
         this.updateVisibility();
     }
 
-    backToCoords(rgba){
+    backToCoords(rgba){ // 16777215
         let coord = (rgba[0] << 16) | (rgba[1] << 8) | (rgba[2]);
-        coord /= ((265*256*256)-1);
+        coord /= ((256*256*256)-1);
         coord = (coord * 200) - 100;
 
-        console.log(coord);
+        console.log("backToCoords: " + coord);
         return coord;
         
     }
 
     addSphere(X, Y, Z){
-        const geometry = new THREE.SphereGeometry( 1, 32, 32 );
+        const geometry = new THREE.SphereGeometry( 0.2, 32, 32 );
         const material = new THREE.MeshBasicMaterial( {color: 0xffff00} );
         const sphere = new THREE.Mesh( geometry, material );
         
         this.scene.add( sphere );
+        this.clickObjects.push(sphere);
 
         sphere.position.x = X;
         sphere.position.y = Y;
@@ -346,3 +398,11 @@ function getEventLocation(event){
         y: (event.pageY - pos.y)
     };
 }
+
+function compareColors(x, y) {
+    equal = true;
+    for (let i = 0; i < 3; i++) {
+      equal = equal && (x[i] == y[i]);
+    }
+    return equal;
+  }
