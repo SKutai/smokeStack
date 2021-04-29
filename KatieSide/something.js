@@ -1,128 +1,141 @@
 // https://www.codecademy.com/learn/introduction-to-javascript/modules/intermediate-javascript-requests/cheatsheet
 // https://attacomsian.com/blog/xhr-post-request 
 
-const http = require('http');
-//const $ = require( "jquery" );
-/*
-const { JSDOM } = require( "jsdom" );
-const { window } = new JSDOM( "" );
-const $ = require( "jquery" )( window );
-*/
-
-const { parse } = require('querystring');
-
 const 
+  http = require('http'),
   hostname = '127.0.0.1',
   port = 3000,
   fs = require("fs"),
-  pathToJSONFile = './storage.json', // was .txt
-  form = document.querySelector('#tag');
+  { parse } = require('querystring');
+  
+let 
+  item,
+  form = "",
+  filedata;
 
-form.addEventListener('submit', (event) => {
-  // dont change the screen
-  event.preventDefault();
-
-  let data = new FormData(form);
-
-  const xhr = new XMLHttpRequest();
-  xhr.open('POST', '/http://127.0.0.1:3000/');
+// read the data that is currently stored on the server
+fs.readFile("./storage.txt", (err, data) => {
+  if(err){
+    console.log(err);
+  }
+  else{
+    filedata = JSON.parse(data.toString());
+    console.log("This is the filedata: "  + JSON.stringify(filedata) + "\ntypeof filedata: " + typeof filedata);
+  }
 });
 
-
-
-
-
-let item,
-    store;
-
+// start up the server
 const server = http.createServer((req, res) => {
-  res.statusCode = 200;
-  res.setHeader('Content-Type', 'text/plain');
-
-  let body = "";
 
   if(req.method == 'POST'){
-    req.on('data', function(chunk)
-    {
-      body += chunk.toString();
-      console.log(body);
-      item = parse(body);
+
+    req.on('data', chunk => {
+      form += chunk.toString();
+    });
+
+    req.on('end', () => {
+      console.log("this is the form: " + form);
+      item = parse(form);
+      form = ""; // reset form so that the data does not pile up
+      console.log("this is the item: " + JSON.stringify(item) + "\n" + typeof item);
+
+      updateJSON();
+      
+      res.end(`<!DOCTYPE html>
+        <html>
+            <head>
+                <style>
+                    html, body {
+                        outline: 5px solid red;
+                        margin: 0;
+                        height: 100%;
+                    }
+
+                    #threecanvas{
+                        outline: 5px solid green;
+                        height: 100%;
+                        width: 70%;
+                    }
+
+                    #sidePanel {
+                        outline: 5px solid blue;
+                        margin: 5px;
+                        float:right;
+                    }
+                </style>
+            </head>
+
+            <body>
+                <canvas id="threecanvas"></canvas>
+
+                <form id='sidePanel' action="http://127.0.0.1:3000/" method="POST" >
+                    <input type="hidden" id="ID" name="ID" value="ID123">
+                    
+                    <h2>
+                        <label for="title">Title</label>
+                    </h2>
+
+                    <input type="text" name="title" id="title">
+                    <br>
+
+                    <h2>
+                        <label for="description">Description</label>
+                    </h2>
+                    <textarea rows="7" cols="50" name="description" id="description"></textarea>
+                    <br>
+
+                    <h2>
+                        <label for="picture">Picture</label>
+                    </h2>
+                    <img id="picture" src="../../resources/galaxy.jpg" alt="landmark on the smokestack" width="300" height="300"><br>
+                    
+                    <input type="submit" value="save" name="save" id = save>
+                </form>
+                
+            </body>
+
+        </html>`); // after request is done the response should be the same index.html
     });
   }
-
+  else{
+    res.end("Finished");
+  }
   
-  /*
-  $.getJSON('storage.json', function(info){
-    let found = false;
-    const len = info.length;
-    
-    for(let i = 0; i < len; i++){
-      if(info[i].title == item.title){
-        found = true;
-        info[i].title = item.title;
-        info[i].description = item.description;
-      }
-    }
-
-    if(!found){
-      info[len] = item;
-    }
-
-    store = data;
-  });
-  */
-
-  //fs.writeFileSync(pathToJSONFile, store);
-
-  res.end('Goodbye.\n');
 }).listen(port);
 
 server.listen(port, hostname, () => {
   console.log(`Server running at http://${hostname}:${port}/`)
-})
+});
 
 
-/*
-function handleSubmit(event) {
-  event.preventDefault();
+// write the new data into the text file that is on the server
+function updateJSON(){
 
-  const data = new FormData(event.target);
-
-  title = data.get('title');
-  description = data.get('description');
-  item = {
-    title : title,
-    description : description
+  // insert the new item into filedata
+  let insertOBJ = {
+    "title": item.title.toString(),
+    "description": item.description.toString()
   };
-  
-  console.log(title);
-  console.log(description);
-  console.log(item);
 
-  $.getJSON('storage.json', function(data) {
-    let found = false;
-    const len = data.length;
-    
-    for(let i = 0; i < len; i++){
-      if(data[i].title == title){
-        found = true;
-        data[i].title = title;
-        data[i].description = description;
+  filedata[item.ID.toString()] = insertOBJ;
+
+  console.log("filedata is now: " + JSON.stringify(filedata));
+
+  // delete the text file on the server
+  if(fs.existsSync("./storage.txt")){
+    fs.unlink("./storage.txt", (err) => {
+      if(err){
+        console.log(err);
       }
+      console.log("file deleted");
+    });
+  }
+
+  // create a new text file and write the new data into it
+  fs.writeFile('./storage.txt', JSON.stringify(filedata), (err) => { 
+    // In case of a error throw err exception. 
+    if (err){
+      console.log(err);
     }
-
-    if(!found){
-      data[len] = item;
-    }
-
-    store = data;
-
-    
   });
-
 }
-
-  
-const form = document.querySelector('form');
-form.addEventListener('submit', handleSubmit);
-*/
