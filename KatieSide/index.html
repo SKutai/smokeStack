@@ -1,25 +1,99 @@
 <!DOCTYPE html>
 <html>
+    <head>
+        <meta charset="UTF-8" />
+        <style>
+            html, body {
+                outline: 5px solid red;
+                margin: 0;
+                height: 100%;
+            }
+
+            #threecanvas{
+                outline: 5px solid green;
+                height: 100%;
+                width: 70%;
+            }
+
+            #sidePanel {
+                outline: 5px solid blue;
+                margin: 5px;
+                float:right;
+            }
+        </style>
+    </head>
 
     <body>
-        
 
-        <form id='tag' action="http://127.0.0.1:3000/" method="POST" > <!-- onsubmit="return false" -->
-            <h3>
+        <canvas id="threecanvas"></canvas>
+
+        <form id='sidePanel'>
+            <input type="hidden" id="ID" name="ID" value="ID123">
+            
+            <h2>
                 <label for="title">Title</label>
-            </h3>
+            </h2>
+
             <input type="text" name="title" id="title">
             <br>
 
-            <h3>
+            <h2>
                 <label for="description">Description</label>
-            </h3>
-            <textarea rows="7" cols="100" name="description" id="description">
-
-            </textarea>
+            </h2>
+            <textarea rows="7" cols="50" name="description" id="description"></textarea>
             <br>
-            <input type="submit" value="Apply" name="apply" id = apply>
+            
+            <input type="submit" value="save" name="save" id="save">
         </form>
+
+        <script>
+            // set the value of "ID" in the form depending on the place on the smokestack that was clicked
+            // when save is clicked then send the form data to the server
+            const xhr = new XMLHttpRequest();
+
+            let ID = document.getElementById("ID");
+            let title = document.getElementById("title");
+            let description = document.getElementById("description");
+            let form = document.getElementById("sidePanel");
+
+            form.addEventListener("submit", function(event) {
+                alert("CLICK DETECTED");
+
+                // variables
+                alert("PREPARING OBJECT");
+                let postObject = {"ID": "ID123", "data": {"title": "t", "description":"d"}};
+                let saveID = ID.value;
+                let saveTitle = title.value;
+                let saveDescription = description.value;
+                let letter = "";
+
+                // prepare object
+                postObject.ID = saveID;
+                postObject.data.title = saveTitle;
+                postObject.data.description = saveDescription;
+                letter = JSON.stringify(postObject);
+                alert(letter);
+
+                // send post object
+                alert("SENDING POST OBJECT");
+                fetch('http://127.0.0.1:3000/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-type': 'application/json'
+                    },
+                    body: letter
+                }).then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    }
+                    throw new Error('Request failed!');
+                    }, networkError => {
+                        console.log(networkError.message);
+                        alert(networkError.message);
+                    });
+            }); 
+            
+        </script>
         
     </body>
 
