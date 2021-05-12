@@ -5,8 +5,7 @@ const
   http = require('http'),
   hostname = '127.0.0.1', // 'localhost'
   port = 3000,
-  fs = require("fs"),
-  { parse } = require('querystring');
+  fs = require("fs");
   
 let 
   item,
@@ -31,7 +30,7 @@ const server = http.createServer((req, res) => {
 	res.setHeader('Access-Control-Request-Method', '*');
 	res.setHeader('Access-Control-Allow-Methods', 'OPTIONS, GET');
 	res.setHeader('Access-Control-Allow-Headers', '*');
-  
+
 	if ( req.method === 'OPTIONS' ) {
 		res.writeHead(200);
 		res.end();
@@ -41,7 +40,6 @@ const server = http.createServer((req, res) => {
   console.log("request made");
 
   if(req.method == 'POST'){
-    item = req.body;
     console.log(item);
 
     req.on('data', chunk => {
@@ -50,7 +48,8 @@ const server = http.createServer((req, res) => {
 
     req.on('end', () => {
       console.log("this is the form: " + form);
-      item = parse(form);
+      console.log("type of form: " + typeof form);
+      item = JSON.parse(form);
       form = ""; // reset form so that the data does not pile up
       console.log("this is the item: " + JSON.stringify(item) + "\n" + typeof item);
 
@@ -74,7 +73,7 @@ server.listen(port, hostname, function(){
 // write the new data into the text file that is on the server
 function updateJSON(){
 
-  filedata[item.ID.toString()] = item.data;
+  filedata[item.ID] = item.data;
 
   console.log("filedata is now: " + JSON.stringify(filedata));
 
