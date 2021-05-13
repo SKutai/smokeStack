@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <meta charset="UTF-8" />
         <style>
             html, body {
                 outline: 5px solid red;
@@ -11,8 +10,6 @@
 
             #threecanvas{
                 outline: 5px solid green;
-                height: 100%;
-                width: 70%;
             }
 
             #sidePanel {
@@ -46,6 +43,7 @@
             <button type="button" id="button">Save</button>
         </form>
 
+        <!-- Send data to the server-->
         <script>
             // set the value of "ID" in the form depending on the place on the smokestack that was clicked
             // when save is clicked then send the form data to the server
@@ -88,6 +86,39 @@
                 alert("SENDING POST OBJECT");
             }); 
             
+        </script>
+
+        <!-- <script src="https://threejs.org/build/three.js"></script> -->
+        
+        <!-- startup three.js -->
+        <script src="../three/three.js/build/three.js"></script>
+        <script src="../three/three.js/build/three.min.js"></script>
+        <script src="../three/three.js/build/three.module.js"></script>
+        
+        <!-- load models and look at them-->
+        <script src="../three/three.js/examples/jsm/loaders/OBJLoader.js"></script>
+        <script src="../three/three.js/examples/jsm/loaders/MTLLoader.js"></script>
+        <script src="../three/three.js/examples/js/controls/OrbitControls.js"></script>
+
+        <!-- postprocessing -->
+        <script src="../three/three.js/examples/jsm/shaders/CopyShader.js"></script>
+        <script src="../three/three.js/examples/jsm/postprocessing/Pass.js"></script>
+        <script src="../three/three.js/examples/jsm/postprocessing/ShaderPass.js"></script>
+        <script src="../three/three.js/examples/jsm/postprocessing/MaskPass.js"></script>
+
+        <script src="../three/three.js/examples/jsm/postprocessing/EffectComposer.js"></script>
+        <script src="../three/three.js/examples/jsm/postprocessing/RenderPass.js"></script>
+        <script src="../three/three.js/examples/jsm/shaders/DigitalGlitch.js"></script>
+        <script src="../three/three.js/examples/jsm/postprocessing/GlitchPass.js"></script>
+
+        <script type="text/javascript" src="../../jquery-3.5.1.min.js"></script>
+        <script type="text/javascript" src="./main.js"></script>
+
+        <script>
+            let filename = '../models/smokeStack/surface.obj';
+            let matname = '../models/smokeStack/surface.mtl';
+            let canvas = new ArtCanvas();
+            canvas.loadMesh(filename, matname);
         </script>
         
     </body>
